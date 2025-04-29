@@ -1,0 +1,41 @@
+LINUX_SRC=/lib/modules/$(shell uname -r)/build
+
+# Target platform for ARM64 (aarch64)
+export CONFIG_MTK_COMBO_PLATFORM=arm64
+export MTK_COMBO_CHIP=MT6632
+
+PWD=$(shell pwd)
+DRIVER_DIR=$(PWD)
+
+export CONFIG_MTK_WIFI_ONLY=m
+export CONFIG_MTK_COMBO=m
+export CONFIG_MTK_COMBO_WIFI=m
+export CONFIG_MTK_COMBO_COMM=m
+export CONFIG_MTK_COMBO_COMM_UART=m
+export CONFIG_MTK_COMBO_COMM_SDIO=m
+export CONFIG_MT_WIFI_CHRDEV=m
+
+ifneq (,$(wildcard ../../wlan_service/))
+export MTK_WLAN_SERVICE_PATH=../../wlan_service/
+endif
+ifneq ($(BACKPORTED_KERNEL_VERSION),)
+export CFG_CFG80211_VERSION ?= $(BACKPORTED_KERNEL_VERSION)
+endif
+
+MODULES_NAME := wlan_$(MTK_COMBO_CHIP)_$(hif).ko
+
+# Cross compiler prefix (if needed)
+# If your system's gcc is configured for aarch64, this is not required.
+# CROSS_COMPILE := aarch64-linux-gnu-
+
+# Compilation rules
+all:
+	$(MAKE) -C $(LINUX_SRC) M=$(PWD) ARCH=arm64 CROSS_COMPILE=$(CROSS_COMPILE) modules
+
+clean:
+	$(MAKE) -C $(LINUX_SRC) M=$(PWD) ARCH=arm64 CROSS_COMPILE=$(CROSS_COMPILE) clean
+
+install:
+	$(MAKE) -C $(LINUX_SRC) M=$(PWD) ARCH=arm64 CROSS_COMPILE=$(CROSS_COMPILE) modules_install
+
+.PHONY: all clean install
